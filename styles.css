@@ -1,0 +1,15 @@
+html {
+	background-color: black;
+}
+iframe {
+	display: block;
+}
+div {
+	text-align: center;
+	display: block;
+	margin: auto;
+}
+* {
+	font-family: Roboto, Arial, Helvetica, sans-serif;
+	text-align: center;
+}
