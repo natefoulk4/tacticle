@@ -31,6 +31,8 @@ export const BORDER_TYPE = {
 export const MARKER_TYPE = {
     frame: {class: "marker-frame", slice: "markerFrame"},
     square: {class: "marker-square", slice: "markerSquare"},
+    badSquare: {class: "wrong-square", slice: "markerSquare"},
+    goodSquare: {class: "correct-square", slice: "markerSquare"},
     dot: {class: "marker-dot", slice: "markerDot"},
     circle: {class: "marker-circle", slice: "markerCircle"}
 }

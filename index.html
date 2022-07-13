@@ -15,92 +15,114 @@
 		<script type="module">
 			import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "./js/Chessboard.js"
 			import { Chess } from "./js/Chess.js"
+			import { speedTactics } from "./assets/speedTactics.js"
 
-			const thisFen = "r5k1/6p1/P4p2/8/3P3Q/6P1/1Pq1PP1P/R5K1 w - - 1 40"
-			const correctMoves = "a1a2 c2b1 g1g2 b1a2"
-
-			const chess = new Chess(thisFen)
+			const chess = new Chess()
 			var pgnIndex = 0
 			var tacticOver = false
 
-			const thisColor = (thisFen.split(' ')[1] === "w") ? COLOR.black : COLOR.white;
-			const moveArray = correctMoves.split(' ')
 
 			const board = new Chessboard(document.getElementById("myBoard"),
 				{
 				position: chess.fen(),
-				style: {cssClass: "blue", moveFromMarker: undefined, moveToMarker: undefined},
-				orientation: thisColor
+				style: {cssClass: "blue", moveFromMarker: undefined, moveToMarker: undefined}
 				}
 			)
-			// Initial move
-			function opponentMove() {
-				board.disableMoveInput()
-				if (pgnIndex >= moveArray.length) {
-					alert("Congratulations!")
-					return 
-				}
-				setTimeout(() => { 
-					const oppMove = moveArray[pgnIndex]
-					console.log("oppMove", oppMove)
-					chess.move(oppMove, { sloppy: true})
-					board.setPosition(chess.fen(), true)
-					pgnIndex += 1
-				}, 500)
-				board.enableMoveInput(inputHandler, thisColor)
-			}
-			function wrongMove() {
-				board.disableMoveInput()
-				setTimeout(() => { 
-					chess.undo()
-					board.setPosition(chess.fen(), true)
-				}, 300)
-				board.enableMoveInput(inputHandler, thisColor)
-			}
 
-			opponentMove()
-			board.enableMoveInput(inputHandler, thisColor)
-			function inputHandler(event) {
-				console.log("event", event)
-				event.chessboard.removeMarkers(undefined, MARKER_TYPE.dot)
-				event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
-				if (event.type === INPUT_EVENT_TYPE.moveStart) {
-					const moves = chess.moves({square: event.square, verbose: true});
-					event.chessboard.addMarker(event.square, MARKER_TYPE.square)
-					for (const move of moves) { // draw dots on possible moves
-						event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
+				
+
+			setTimeout(() => { 
+				alert("Welcome to Tacticle! Ready for the daily puzzle?")
+				var today = new Date();
+				var Jul13 = new Date("2022/07/13");
+				const tacticNo = Math.floor(Math.abs(today-Jul13) / (1000 * 60 * 60 * 24))
+				const thisFen = speedTactics[tacticNo][1]
+				const correctMoves = speedTactics[tacticNo][2]
+
+				const thisColor = (thisFen.split(' ')[1] === "w") ? COLOR.black : COLOR.white;
+				const moveArray = correctMoves.split(' ')
+
+				chess.clear()
+				board.setPosition(chess.fen(), false)
+				board.setOrientation(thisColor)
+				chess.load(thisFen)
+				board.setPosition(chess.fen(), false)
+				setTimeout(() => {
+					opponentMove()
+				}, 100)
+				board.enableMoveInput(inputHandler, thisColor)
+
+				function opponentMove() {
+					board.disableMoveInput()
+					if (pgnIndex >= moveArray.length) {
+						setTimeout(() => {
+							alert("Congratulations!")
+						}, 300)
+						return 
 					}
-					return moves.length > 0
-				} else if (event.type === INPUT_EVENT_TYPE.moveDone) {
-					const move = event.squareFrom + event.squareTo
-					const correctMove = moveArray[pgnIndex]
-					var result = chess.move(move, { sloppy: true })
-					if (result) {
-						if (move != correctMove) {
-							wrongMove()
-						} else {
-							const possibleMoves = chess.moves({verbose: true})
-							if (pgnIndex < moveArray.length ) {
-								pgnIndex += 1
-								opponentMove()
-							} 
-							console.log("index", pgnIndex)
+					setTimeout(() => { 
+						const oppMove = moveArray[pgnIndex]
+						chess.move(oppMove, { sloppy: true})
+						board.setPosition(chess.fen(), true)
+						pgnIndex += 1
+						board.removeMarkers(undefined, MARKER_TYPE.goodSquare)
+					}, 500)
+					board.enableMoveInput(inputHandler, thisColor)
+				}
+				function wrongMove() {
+					board.disableMoveInput()
+					setTimeout(() => { 
+						chess.undo()
+						board.setPosition(chess.fen(), true)
+						board.removeMarkers(undefined, MARKER_TYPE.badSquare)
+					}, 400)
+					board.enableMoveInput(inputHandler, thisColor)
+				}
+
+
+				// Initial move
+				function inputHandler(event) {
+					event.chessboard.removeMarkers(undefined, MARKER_TYPE.dot)
+					event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
+					if (event.type === INPUT_EVENT_TYPE.moveStart) {
+						const moves = chess.moves({square: event.square, verbose: true});
+						event.chessboard.addMarker(event.square, MARKER_TYPE.square)
+						for (const move of moves) { // draw dots on possible moves
+							event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
 						}
-					} else {
-						console.warn("invalid move", move)
+						return moves.length > 0
+					} else if (event.type === INPUT_EVENT_TYPE.moveDone) {
+						const move = event.squareFrom + event.squareTo
+						const correctMove = moveArray[pgnIndex]
+						var result = chess.move(move, { sloppy: true })
+						if (result) {
+							if (move != correctMove) {
+								event.chessboard.addMarker(event.squareFrom, MARKER_TYPE.badSquare)
+								event.chessboard.addMarker(event.squareTo, MARKER_TYPE.badSquare)
+								wrongMove()
+							} else {
+								event.chessboard.addMarker(event.squareFrom, MARKER_TYPE.goodSquare)
+								event.chessboard.addMarker(event.squareTo, MARKER_TYPE.goodSquare)
+								const possibleMoves = chess.moves({verbose: true})
+								if (pgnIndex < moveArray.length ) {
+									pgnIndex += 1
+									opponentMove()
+								} 
+							}
+						} else {
+							console.warn("invalid move", move)
+						}
+						return result
 					}
-					return result
 				}
-			}
+				
+				function copyButton() {
+  					navigator.clipboard.writeText("I've been copied!");
+				}
 
-			const output = document.getElementById("output")
-
-			function log(text) {
-				const log = document.createElement("div")
-				log.innerText = text
-				output.appendChild(log)
-			}				
+			}, 50)	
+	
 		</script>
-		<div id="output" style="color: white;"></div>
+		<button id="share" onclick="copyButton()">Copy something!</button>
 	</body>
 </html>

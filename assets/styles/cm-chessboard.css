@@ -15,6 +15,14 @@
   fill: black;
   opacity: 0.11; }
 
+.cm-chessboard .markers .marker.wrongSquare, .cm-chessboard .markers .marker.wrong-square {
+  fill: #aa0000;
+  opacity: 0.6; }
+
+.cm-chessboard .markers .marker.correctSquare, .cm-chessboard .markers .marker.correct-square {
+  fill: #6dca5f;
+  opacity: 0.6; }
+  
 .cm-chessboard .markers .marker.markerDot, .cm-chessboard .markers .marker.marker-dot {
   fill: black;
   opacity: 0.3; }
