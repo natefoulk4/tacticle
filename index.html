@@ -13,27 +13,83 @@
 		<hr style="border-color: rgb(31, 31, 31); margin-top: 2px; margin-bottom: 10px;">
 		<div id="myBoard" style="height: 85vmin; width: 85vmin"></div>
 		<script type="module">
-			import {INPUT_EVENT_TYPE, Chessboard} from "./js/Chessboard.js"
-		
+			import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "./js/Chessboard.js"
+			import { Chess } from "./js/Chess.js"
+
+			const thisFen = "r5k1/6p1/P4p2/8/3P3Q/6P1/1Pq1PP1P/R5K1 w - - 1 40"
+			const correctMoves = "a1a2 c2b1 g1g2 b1a2"
+
+			const chess = new Chess(thisFen)
+			var pgnIndex = 0
+			var tacticOver = false
+
+			const thisColor = (thisFen.split(' ')[1] === "w") ? COLOR.black : COLOR.white;
+			const moveArray = correctMoves.split(' ')
+
 			const board = new Chessboard(document.getElementById("myBoard"),
 				{
-				position: "start",
-				style: {cssClass: "blue"}
-				})
+				position: chess.fen(),
+				style: {cssClass: "blue", moveFromMarker: undefined, moveToMarker: undefined},
+				orientation: thisColor
+				}
+			)
+			// Initial move
+			function opponentMove() {
+				board.disableMoveInput()
+				if (pgnIndex >= moveArray.length) {
+					alert("Congratulations!")
+					return 
+				}
+				setTimeout(() => { 
+					const oppMove = moveArray[pgnIndex]
+					console.log("oppMove", oppMove)
+					chess.move(oppMove, { sloppy: true})
+					board.setPosition(chess.fen(), true)
+					pgnIndex += 1
+				}, 500)
+				board.enableMoveInput(inputHandler, thisColor)
+			}
+			function wrongMove() {
+				board.disableMoveInput()
+				setTimeout(() => { 
+					chess.undo()
+					board.setPosition(chess.fen(), true)
+				}, 300)
+				board.enableMoveInput(inputHandler, thisColor)
+			}
 
-			
-			board.enableMoveInput(inputHandler)
+			opponentMove()
+			board.enableMoveInput(inputHandler, thisColor)
 			function inputHandler(event) {
-				console.log(event)
-				switch (event.type) {
-					case INPUT_EVENT_TYPE.moveStart:
-						console.log(`moveStart: ${event.square}`)
-						return true
-					case INPUT_EVENT_TYPE.moveDone:
-						console.log(`moveDone: ${event.squareFrom}-${event.squareTo}`)
-						return true
-					case INPUT_EVENT_TYPE.moveCanceled:
-						console.log(`moveCanceled`)
+				console.log("event", event)
+				event.chessboard.removeMarkers(undefined, MARKER_TYPE.dot)
+				event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
+				if (event.type === INPUT_EVENT_TYPE.moveStart) {
+					const moves = chess.moves({square: event.square, verbose: true});
+					event.chessboard.addMarker(event.square, MARKER_TYPE.square)
+					for (const move of moves) { // draw dots on possible moves
+						event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
+					}
+					return moves.length > 0
+				} else if (event.type === INPUT_EVENT_TYPE.moveDone) {
+					const move = event.squareFrom + event.squareTo
+					const correctMove = moveArray[pgnIndex]
+					var result = chess.move(move, { sloppy: true })
+					if (result) {
+						if (move != correctMove) {
+							wrongMove()
+						} else {
+							const possibleMoves = chess.moves({verbose: true})
+							if (pgnIndex < moveArray.length ) {
+								pgnIndex += 1
+								opponentMove()
+							} 
+							console.log("index", pgnIndex)
+						}
+					} else {
+						console.warn("invalid move", move)
+					}
+					return result
 				}
 			}
 
