@@ -5,6 +5,7 @@
 		<link rel="stylesheet" href="assets/styles/styles.css">
 		<link rel="stylesheet" href="assets/styles/cm-chessboard.css">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta charset="UTF-8">
 	</head>
 	<body>
 		<header>
@@ -13,24 +14,19 @@
 		<hr style="border-color: rgb(31, 31, 31); margin-top: 2px; margin-bottom: 10px;">
 		<div id="myBoard" style="height: 85vmin; width: 85vmin"></div>
 		<script>
-			function copyButton() {
-				var text = "Example text to appear on clipboard";
-				navigator.clipboard.writeText(text).then(function() {
-				console.log('Async: Copying to clipboard was successful!');
-				}, function(err) {
-				console.error('Async: Could not copy text: ', err);
-				});
-			}
+
+			import { tacticOver } from "main"
+			
 		</script>
-		<button id="share" onclick="copyButton()">Copy something!</button>
-		<script type="module">
+		<button id="share">See if copying works</button>
+		<script type="module" id="main">
 			import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "./js/Chessboard.js"
 			import { Chess } from "./js/Chess.js"
 			import { speedTactics } from "./assets/speedTactics.js"
 
 			const chess = new Chess()
 			var pgnIndex = 0
-			var tacticOver = false
+			export var tacticOver = false
 
 
 			const board = new Chessboard(document.getElementById("myBoard"),
@@ -128,7 +124,23 @@
 				}
 
 			}, 50)	
-				
+			
+			const whiteSquare = String.fromCodePoint(0x2B1C)
+			const greenSquare = String.fromCodePoint(0x1F7E9)
+			const blackSquare = String.fromCodePoint(0x2B1B)
+			const yellowSquare = String.fromCodePoint(0x1F7E8)
+			function copyButton(e) {
+				var text = "Tacticle 4/6 \n"+whiteSquare+yellowSquare+greenSquare+blackSquare;
+				navigator.clipboard.writeText(text).then(function() {
+				console.log('Async: Copying to clipboard was successful!');
+				}, function(err) {
+				console.error('Async: Could not copy text: ', err);
+				});
+			}
+
+			const btn = document.querySelector('button');
+
+			btn.addEventListener('click', copyButton);
 	
 		</script>
 	</body>
