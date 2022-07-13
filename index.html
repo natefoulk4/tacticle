@@ -2,14 +2,45 @@
 	<head>
 		<title>Tacticle - A daily chess puzzle game</title>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-		<script src="js/chessboard-1.0.0.min.js"></script>
-		<link rel="stylesheet" href="css/chessboard-1.0.0.min.css">
-		<link rel="stylesheet" href="styles.css">
+		<link rel="stylesheet" href="assets/styles/styles.css">
+		<link rel="stylesheet" href="assets/styles/cm-chessboard.css">
 	</head>
 	<body>
 		<h1 style="text-align: center; color: rgb(255, 255, 255)">Tacticle</h1>
-		<div id="myBoard" style="width: 400px; height: 400px; text-align: center"></div>
-		<script type="module" src="js/chesscode.js">
+		<div id="myBoard" style="height: 33em; width: 33em;"></div>
+		<script type="module">
+			import {INPUT_EVENT_TYPE, Chessboard} from "./js/Chessboard.js"
+		
+			const board = new Chessboard(document.getElementById("myBoard"),
+				{
+				position: "start",
+				style: {cssClass: "blue"}
+				})
+
+			
+			board.enableMoveInput(inputHandler)
+			function inputHandler(event) {
+				console.log(event)
+				switch (event.type) {
+					case INPUT_EVENT_TYPE.moveStart:
+						console.log(`moveStart: ${event.square}`)
+						return true
+					case INPUT_EVENT_TYPE.moveDone:
+						console.log(`moveDone: ${event.squareFrom}-${event.squareTo}`)
+						return true
+					case INPUT_EVENT_TYPE.moveCanceled:
+						console.log(`moveCanceled`)
+				}
+			}
+
+			const output = document.getElementById("output")
+
+			function log(text) {
+				const log = document.createElement("div")
+				log.innerText = text
+				output.appendChild(log)
+			}				
 		</script>
+		<div id="output" style="color: white;"></div>
 	</body>
 </html>
