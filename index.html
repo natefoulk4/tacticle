@@ -12,6 +12,17 @@
 		</header>
 		<hr style="border-color: rgb(31, 31, 31); margin-top: 2px; margin-bottom: 10px;">
 		<div id="myBoard" style="height: 85vmin; width: 85vmin"></div>
+		<script>
+			function copyButton() {
+				var text = "Example text to appear on clipboard";
+				navigator.clipboard.writeText(text).then(function() {
+				console.log('Async: Copying to clipboard was successful!');
+				}, function(err) {
+				console.error('Async: Could not copy text: ', err);
+				});
+			}
+		</script>
+		<button id="share" onclick="copyButton()">Copy something!</button>
 		<script type="module">
 			import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "./js/Chessboard.js"
 			import { Chess } from "./js/Chess.js"
@@ -115,19 +126,10 @@
 						return result
 					}
 				}
-				
-				function copyButton() {
-					var text = "Example text to appear on clipboard";
-					navigator.clipboard.writeText(text).then(function() {
-					console.log('Async: Copying to clipboard was successful!');
-					}, function(err) {
-					console.error('Async: Could not copy text: ', err);
-					});
-				}
 
 			}, 50)	
+				
 	
 		</script>
-		<button id="share" onclick="copyButton()">Copy something!</button>
 	</body>
 </html>
