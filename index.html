@@ -125,7 +125,6 @@
 								for (const i in [...Array(6-attemptNum).keys()]) {
 									scoreArray[attemptNum+parseInt(i)] += 1
 								}
-								alert(scoreArray)
 								const possibleMoves = chess.moves({verbose: true})
 								if (pgnIndex < moveArray.length ) {
 									pgnIndex += 1
@@ -160,7 +159,7 @@
 				}
 				const today = new Date()
 				var dateStr = today.getMonth() + "/" + today.getDate() + "/" + today.getFullYear()
-				var text = "Tacticle "+ dateStr.substring(0,dateStr.length-4)+ dateStr.substring(dateStr.length-2)  +" "+finalScore+"/6 \n"+squareArray.join() + "\n https://natefoulk4.github.io/tacticle";
+				var text = "Tacticle "+ dateStr.substring(0,dateStr.length-4)+ dateStr.substring(dateStr.length-2)  +" "+finalScore+"/6 \n"+squareArray.join("") + "\n https://natefoulk4.github.io/tacticle";
 				navigator.clipboard.writeText(text).then(function() {
 					console.log('Async: Copying to clipboard was successful!');
 				}, function(err) {
