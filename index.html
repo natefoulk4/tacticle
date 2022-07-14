@@ -12,20 +12,22 @@
 			<h1 style="text-align: center; color: rgb(255, 255, 255); margin-bottom: 0px;">Tacticle</h1>
 		</header>
 		<hr style="border-color: rgb(31, 31, 31); margin-top: 2px; margin-bottom: 10px;">
+		<div id="myModal" class="modal">
+			<h1 id="modalTitle">Well done!</h1>
+			<button id="share">Share</button>
+		</div>
 		<div id="myBoard" style="height: 85vmin; width: 85vmin"></div>
-		<script>
 
-			import { tacticOver } from "main"
-			
-		</script>
-		<button id="share">See if copying works</button>
 		<script type="module" id="main">
 			import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "./js/Chessboard.js"
 			import { Chess } from "./js/Chess.js"
-			import { speedTactics } from "./assets/speedTactics.js"
+			import { hardTactics } from "./assets/hardTactics.js"
 
 			const chess = new Chess()
 			var pgnIndex = 0
+			var attemptNum = 0
+			var scoreArray = [0,0,0,0,0,0]
+			var finalScore = "X"
 			export var tacticOver = false
 
 
@@ -43,8 +45,8 @@
 				var today = new Date();
 				var Jul13 = new Date("2022/07/13");
 				const tacticNo = Math.floor(Math.abs(today-Jul13) / (1000 * 60 * 60 * 24))
-				const thisFen = speedTactics[tacticNo][1]
-				const correctMoves = speedTactics[tacticNo][2]
+				const thisFen = hardTactics[tacticNo][1]
+				const correctMoves = hardTactics[tacticNo][2]
 
 				const thisColor = (thisFen.split(' ')[1] === "w") ? COLOR.black : COLOR.white;
 				const moveArray = correctMoves.split(' ')
@@ -62,11 +64,13 @@
 				function opponentMove() {
 					board.disableMoveInput()
 					if (pgnIndex >= moveArray.length) {
+						scoreArray[attemptNum] = -1
+						finalScore = attemptNum + 1
 						setTimeout(() => {
-							alert("Congratulations!")
+							openModal("Well done!")
 						}, 300)
 						return 
-					}
+					} 
 					setTimeout(() => { 
 						const oppMove = moveArray[pgnIndex]
 						chess.move(oppMove, { sloppy: true})
@@ -82,6 +86,14 @@
 						chess.undo()
 						board.setPosition(chess.fen(), true)
 						board.removeMarkers(undefined, MARKER_TYPE.badSquare)
+						incrementAttempt().then(function() {
+							if (attemptNum > 5) { 
+								board.disableMoveInput()
+								openModal("Better luck next time") 
+							};
+						}, function(err) {
+							console.error('count not increment attemptNum: ', err);
+						})
 					}, 400)
 					board.enableMoveInput(inputHandler, thisColor)
 				}
@@ -110,6 +122,10 @@
 							} else {
 								event.chessboard.addMarker(event.squareFrom, MARKER_TYPE.goodSquare)
 								event.chessboard.addMarker(event.squareTo, MARKER_TYPE.goodSquare)
+								for (const i in [...Array(6-attemptNum).keys()]) {
+									scoreArray[attemptNum+parseInt(i)] += 1
+								}
+								alert(scoreArray)
 								const possibleMoves = chess.moves({verbose: true})
 								if (pgnIndex < moveArray.length ) {
 									pgnIndex += 1
@@ -125,22 +141,49 @@
 
 			}, 50)	
 			
-			const whiteSquare = String.fromCodePoint(0x2B1C)
+			const redSquare = String.fromCodePoint(0x1F7E5)
 			const greenSquare = String.fromCodePoint(0x1F7E9)
 			const blackSquare = String.fromCodePoint(0x2B1B)
 			const yellowSquare = String.fromCodePoint(0x1F7E8)
+
 			function copyButton(e) {
-				var text = "Tacticle 4/6 \n"+whiteSquare+yellowSquare+greenSquare+blackSquare;
+				var squareArray = [blackSquare,blackSquare,blackSquare,blackSquare,blackSquare,blackSquare]
+				for (const [index,score] of scoreArray.entries()) {
+					if (score === 0) {
+						squareArray[index] = redSquare
+					} else if (score === -1) {
+						squareArray[index] = greenSquare;
+						break;
+					} else {
+						squareArray[index] = yellowSquare
+					}
+				}
+				const today = new Date()
+				var dateStr = today.getMonth() + "/" + today.getDate() + "/" + today.getFullYear()
+				var text = "Tacticle "+ dateStr.substring(0,dateStr.length-4)+ dateStr.substring(dateStr.length-2)  +" "+finalScore+"/6 \n"+squareArray.join() + "\n https://natefoulk4.github.io/tacticle";
 				navigator.clipboard.writeText(text).then(function() {
-				console.log('Async: Copying to clipboard was successful!');
+					console.log('Async: Copying to clipboard was successful!');
 				}, function(err) {
-				console.error('Async: Could not copy text: ', err);
+					console.error('Async: Could not copy text: ', err);
 				});
+			}
+			const modal = document.getElementById("myModal");
+			const modalTitle = document.getElementById("modalTitle");
+
+			function openModal(text) {
+				modal.style.display = "block"
+				modalTitle.innerHTML = text
+			}
+
+			function incrementAttempt() { 
+				attemptNum += 1; 
+				console.log(attemptNum)
+				return Promise.resolve("Success");
 			}
 
 			const btn = document.querySelector('button');
 
-			btn.addEventListener('click', copyButton);
+			btn.addEventListener('click', copyButton);		
 	
 		</script>
 	</body>

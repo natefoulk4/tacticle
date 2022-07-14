@@ -11,7 +11,5 @@ Tacticle is a chess tactic-themed Wordle descendant.
 - [x] Implement basic "right move" or "wrong move" graphics
 - [x] Implement basic "Puzzle complete"
 - [x] Make it a daily thing
-- [ ] Implement basic scoring system
-- [ ] Make basic Share button
-
-I'll want to use "promises" to get a lot of this to work
+- [x] Implement basic scoring system
+- [x] Make basic Share button

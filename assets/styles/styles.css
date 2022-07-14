@@ -13,3 +13,34 @@ div {
 	font-family: Roboto, Arial, Helvetica, sans-serif;
 	text-align: center;
 }
+button {
+	background-color: #474747; /* Green */
+	border: none;
+	color: white;
+	padding: 15px 32px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 30px;
+  }
+button:active {
+	background-color: #858585;
+}
+/* The Modal (background) */
+.modal {
+	display: none; /* Hidden by default */
+	position:fixed;
+	left: 30%;
+	z-index: 1; /* Sit on top */
+	top: 130px; /* Location of the box */
+	padding-top: 100px;
+	width: 40%; /* Full width */
+	height: 50%; /* Full height */
+	overflow: auto; /* Enable scroll if needed */
+	background-color: rgb(12, 12, 12); /* Fallback color */
+}
+h1 {
+	text-align: center; 
+	color: rgb(255, 255, 255); 
+	margin-bottom: 0px;
+}
