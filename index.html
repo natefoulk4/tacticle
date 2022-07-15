@@ -21,7 +21,7 @@
 		<script type="module" id="main">
 			import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "./js/Chessboard.js"
 			import { Chess } from "./js/Chess.js"
-			import { hardTactics } from "./assets/hardTactics.js"
+			import { speedTactics } from "./assets/speedTactics.js"
 
 			const chess = new Chess()
 			var pgnIndex = 0
@@ -45,8 +45,8 @@
 				var today = new Date();
 				var Jul13 = new Date("2022/07/13");
 				const tacticNo = Math.floor(Math.abs(today-Jul13) / (1000 * 60 * 60 * 24))
-				const thisFen = hardTactics[tacticNo][1]
-				const correctMoves = hardTactics[tacticNo][2]
+				const thisFen = speedTactics[tacticNo][1]
+				const correctMoves = speedTactics[tacticNo][2]
 
 				const thisColor = (thisFen.split(' ')[1] === "w") ? COLOR.black : COLOR.white;
 				const moveArray = correctMoves.split(' ')
