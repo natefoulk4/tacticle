@@ -16,19 +16,34 @@
 			<h1 id="modalTitle">Well done!</h1>
 			<button id="share">Share</button>
 		</div>
-		<div id="myBoard" style="height: 85vmin; width: 85vmin"></div>
+		<div id="score-time" style="width: 75vmin">
+			<p id="score" style="float: left; color: white; font-size: large;">Score: 0</p>
+			<p id="timer" style="float: right; color: white; font-size: large;">1:00</p>
+		</div>
+		<div id="myBoard" style="height: 75vmin; width: 75vmin"></div>
 
 		<script type="module" id="main">
 			import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "./js/Chessboard.js"
 			import { Chess } from "./js/Chess.js"
-			import { hardTactics } from "./assets/hardTactics.js"
+			import { tactics } from "./assets/tactics.js"
+
+			const startdate = new Date(2022, 6, 23).getTime()
+			const nowdate = new Date().getTime()
+			var seed = Math.floor((nowdate-startdate)/(24*60*60*1000))
+			const tacticNos = []
+				
+			for (let i = 0; i < 53; i++) {
+				tacticNos.push( (((seed+5)**5 - (seed+5)**3) % (i+200)) + seed + 300*(i) )
+			}
 
 			const chess = new Chess()
+			const strikes = 3
+
+			var tacticInd = 0
 			var pgnIndex = 0
-			var attemptNum = 0
-			var scoreArray = [0,0,0,0,0,0]
-			var finalScore = "X"
-			export var tacticOver = false
+			var numWrong = 0
+			var score = 0
+			const squareArray = []
 
 
 			const board = new Chessboard(document.getElementById("myBoard"),
@@ -38,18 +53,45 @@
 				}
 			)
 
+			var thisFen = tactics[tacticInd][1]
+			var correctMoves = tactics[tacticInd][2]
+
+			var thisColor = (thisFen.split(' ')[1] === "w") ? COLOR.black : COLOR.white;
+			var moveArray = correctMoves.split(' ')
+			setTimeout(() => {
 				
-
-			setTimeout(() => { 
-				alert("Welcome to Tacticle! Ready for the daily puzzle?")
-				var today = new Date();
-				var Jul13 = new Date("2022/07/13");
-				const tacticNo = Math.floor(Math.abs(today-Jul13) / (1000 * 60 * 60 * 24))
-				const thisFen = hardTactics[tacticNo][1]
-				const correctMoves = hardTactics[tacticNo][2]
-
-				const thisColor = (thisFen.split(' ')[1] === "w") ? COLOR.black : COLOR.white;
-				const moveArray = correctMoves.split(' ')
+				alert("Welcome to Tacticle! Ready for the daily puzzles?")
+				playPuzzle()
+				var startTime = new Date().getTime();
+				updateTimer(startTime)
+			}, 100)
+				
+			function updateTimer(startTime) {
+				setTimeout(() => {
+					var time = new Date().getTime();
+					var seconds = Math.round((startTime+120000 - time) / 1000)
+					var secondsStr = (seconds%60 < 10) ? '0' + (seconds%60).toString() : (seconds%60).toString()
+					document.getElementById("timer").innerHTML = Math.floor(seconds/60)+":"+secondsStr
+					if (numWrong == strikes) {
+						return
+					} else if (seconds == 0 ) {
+						openModal("Time's up!")
+						squareArray.push(yellowSquare)
+						board.disableMoveInput()
+						return
+					}
+					updateTimer(startTime)
+				}, 1000)
+			}
+			
+			function playPuzzle() {
+				board.removeMarkers(undefined, MARKER_TYPE.badSquare)
+				board.removeMarkers(undefined, MARKER_TYPE.goodSquare)
+				pgnIndex = 0
+				thisFen = tactics[tacticNos[tacticInd]][1]
+				correctMoves = tactics[tacticNos[tacticInd]][2]
+				thisColor = (thisFen.split(' ')[1] === "w") ? COLOR.black : COLOR.white;
+				moveArray = correctMoves.split(' ')
 
 				chess.clear()
 				board.setPosition(chess.fen(), false)
@@ -60,112 +102,105 @@
 					opponentMove()
 				}, 100)
 				board.enableMoveInput(inputHandler, thisColor)
+			}
 
-				function opponentMove() {
-					board.disableMoveInput()
-					if (pgnIndex >= moveArray.length) {
-						scoreArray[attemptNum] = -1
-						finalScore = attemptNum + 1
-						setTimeout(() => {
-							openModal("Well done!")
-						}, 300)
-						return 
-					} 
-					setTimeout(() => { 
-						const oppMove = moveArray[pgnIndex]
-						chess.move(oppMove, { sloppy: true})
-						board.setPosition(chess.fen(), true)
-						pgnIndex += 1
-						board.removeMarkers(undefined, MARKER_TYPE.goodSquare)
-					}, 500)
-					board.enableMoveInput(inputHandler, thisColor)
-				}
-				function wrongMove() {
-					board.disableMoveInput()
-					setTimeout(() => { 
-						chess.undo()
-						board.setPosition(chess.fen(), true)
-						board.removeMarkers(undefined, MARKER_TYPE.badSquare)
-						incrementAttempt().then(function() {
-							if (attemptNum > 5) { 
-								board.disableMoveInput()
-								openModal("Better luck next time") 
-							};
-						}, function(err) {
-							console.error('count not increment attemptNum: ', err);
-						})
-					}, 400)
-					board.enableMoveInput(inputHandler, thisColor)
-				}
-
-
-				// Initial move
-				function inputHandler(event) {
-					event.chessboard.removeMarkers(undefined, MARKER_TYPE.dot)
-					event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
-					if (event.type === INPUT_EVENT_TYPE.moveStart) {
-						const moves = chess.moves({square: event.square, verbose: true});
-						event.chessboard.addMarker(event.square, MARKER_TYPE.square)
-						for (const move of moves) { // draw dots on possible moves
-							event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
-						}
-						return moves.length > 0
-					} else if (event.type === INPUT_EVENT_TYPE.moveDone) {
-						const move = event.squareFrom + event.squareTo
-						const correctMove = moveArray[pgnIndex]
-						var result = chess.move(move, { sloppy: true })
-						if (result) {
-							if (move != correctMove) {
-								event.chessboard.addMarker(event.squareFrom, MARKER_TYPE.badSquare)
-								event.chessboard.addMarker(event.squareTo, MARKER_TYPE.badSquare)
-								wrongMove()
-							} else {
-								event.chessboard.addMarker(event.squareFrom, MARKER_TYPE.goodSquare)
-								event.chessboard.addMarker(event.squareTo, MARKER_TYPE.goodSquare)
-								for (const i in [...Array(6-attemptNum).keys()]) {
-									scoreArray[attemptNum+parseInt(i)] += 1
-								}
-								const possibleMoves = chess.moves({verbose: true})
-								if (pgnIndex < moveArray.length ) {
-									pgnIndex += 1
-									opponentMove()
-								} 
-							}
-						} else {
-							console.warn("invalid move", move)
-						}
-						return result
+			function inputHandler(event) {
+				event.chessboard.removeMarkers(undefined, MARKER_TYPE.dot)
+				event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
+				if (event.type === INPUT_EVENT_TYPE.moveStart) {
+					const moves = chess.moves({square: event.square, verbose: true});
+					event.chessboard.addMarker(event.square, MARKER_TYPE.square)
+					for (const move of moves) { // draw dots on possible moves
+						event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
 					}
+					return moves.length > 0
+				} else if (event.type === INPUT_EVENT_TYPE.moveDone) {
+					const move = event.squareFrom + event.squareTo
+					const correctMove = moveArray[pgnIndex]
+					var result = chess.move(move, { sloppy: true })
+					if (result) {
+						if (move != correctMove) {
+							event.chessboard.addMarker(event.squareFrom, MARKER_TYPE.badSquare)
+							event.chessboard.addMarker(event.squareTo, MARKER_TYPE.badSquare)
+							wrongMove()
+						} else {
+							event.chessboard.addMarker(event.squareFrom, MARKER_TYPE.goodSquare)
+							event.chessboard.addMarker(event.squareTo, MARKER_TYPE.goodSquare)
+							const possibleMoves = chess.moves({verbose: true})
+							if (pgnIndex < moveArray.length ) {
+								pgnIndex += 1
+								opponentMove()
+							} 
+						}
+					} else {
+						console.warn("invalid move", move)
+					}
+					return result
 				}
+			}
 
-			}, 50)	
-			
 			const redSquare = String.fromCodePoint(0x1F7E5)
 			const greenSquare = String.fromCodePoint(0x1F7E9)
 			const blackSquare = String.fromCodePoint(0x2B1B)
 			const yellowSquare = String.fromCodePoint(0x1F7E8)
 
 			function copyButton(e) {
-				var squareArray = [blackSquare,blackSquare,blackSquare,blackSquare,blackSquare,blackSquare]
-				for (const [index,score] of scoreArray.entries()) {
-					if (score === 0) {
-						squareArray[index] = redSquare
-					} else if (score === -1) {
-						squareArray[index] = greenSquare;
-						break;
-					} else {
-						squareArray[index] = yellowSquare
-					}
-				}
-				const today = new Date()
-				var dateStr = today.getMonth() + "/" + today.getDate() + "/" + today.getFullYear()
-				var text = "Tacticle "+ dateStr.substring(0,dateStr.length-4)+ dateStr.substring(dateStr.length-2)  +" "+finalScore+"/6 \n"+squareArray.join("") + "\n https://natefoulk4.github.io/tacticle";
+				var text = "Tacticle "+ (seed+1)  +"  Score: "+score+" \n"+squareArray.join("")+ "\n https://natefoulk4.github.io/tacticle";
 				navigator.clipboard.writeText(text).then(function() {
 					console.log('Async: Copying to clipboard was successful!');
 				}, function(err) {
 					console.error('Async: Could not copy text: ', err);
 				});
 			}
+			function opponentMove() {
+				board.disableMoveInput()
+				if (pgnIndex >= moveArray.length) {
+					tacticInd += 1
+					score += 1
+					squareArray.push(greenSquare)
+					if (tacticInd % 5 == 0) {
+						setTimeout(() => { squareArray.push("\n")}, 50)
+					}
+					setTimeout(() => {
+						document.getElementById("score").innerHTML = "Score: "+score
+						playPuzzle()
+					}, 100)
+					return 
+				} 
+				setTimeout(() => { 
+					const oppMove = moveArray[pgnIndex]
+					chess.move(oppMove, { sloppy: true})
+					board.setPosition(chess.fen(), true)
+					pgnIndex += 1
+					board.removeMarkers(undefined, MARKER_TYPE.goodSquare)
+				}, 300)
+				board.enableMoveInput(inputHandler, thisColor)
+			}
+
+			function wrongMove() {
+				board.disableMoveInput()
+				tacticInd += 1
+				squareArray.push(redSquare)
+				if (tacticInd % 5 == 0) {
+					setTimeout(() => { squareArray.push("\n")}, 50)
+				}
+				incrementStrikes().then(function() {
+					if (numWrong == strikes) { 
+						board.disableMoveInput()
+						openModal("3 strikes! You're out!") 
+					} else {
+						setTimeout(() => { 
+							chess.undo()
+							board.setPosition(chess.fen(), true)
+							playPuzzle()
+						}, 300)
+					};
+				}, function(err) {
+					console.error('count not increment numWrong: ', err);
+				})
+				board.enableMoveInput(inputHandler, thisColor)
+			}
+
 			const modal = document.getElementById("myModal");
 			const modalTitle = document.getElementById("modalTitle");
 
@@ -174,9 +209,9 @@
 				modalTitle.innerHTML = text
 			}
 
-			function incrementAttempt() { 
-				attemptNum += 1; 
-				console.log(attemptNum)
+			function incrementStrikes() { 
+				numWrong += 1; 
+				console.log(numWrong)
 				return Promise.resolve("Success");
 			}
 

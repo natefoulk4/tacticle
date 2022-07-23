@@ -34,10 +34,10 @@ button:active {
 	z-index: 1; /* Sit on top */
 	top: 130px; /* Location of the box */
 	padding-top: 100px;
-	width: 40%; /* Full width */
+	width: 50vmin; /* Full width */
 	height: 50%; /* Full height */
 	overflow: auto; /* Enable scroll if needed */
-	background-color: rgb(12, 12, 12); /* Fallback color */
+	background-color: rgb(112, 112, 112); /* Fallback color */
 }
 h1 {
 	text-align: center; 
